@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrevGestão - Controle de Benefícios Previdenciários</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js para Relatórios Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbars and Print Styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col min-h-screen">
+
+    <!-- Top Header Navigation -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-tr from-brand-600 to-indigo-500 p-2.5 rounded-xl shadow-md">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                            PrevGestão
+                            <span class="text-xs font-medium bg-brand-500/30 text-brand-300 border border-brand-500/40 px-2 py-0.5 rounded-full">v2.5</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Controle de Fichas e Processos Previdenciários</p>
+                    </div>
+                </div>
+
+                <!-- Status do Banco de Dados & Quick Actions -->
+                <div class="flex items-center space-x-3">
+                    <div id="db-status-badge" class="hidden sm:flex items-center space-x-2 text-xs bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg">
+                        <span class="relative flex h-2 w-2">
+                          <span id="db-pulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span id="db-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span id="db-status-text" class="text-slate-300">Conectado (Nuvem)</span>
+                    </div>
+
+                    <button onclick="openModal('record-modal')" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm px-4 py-2 rounded-xl transition duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span>Nova Ficha</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- KPI Dashboard Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Total Fichas -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total de Fichas</p>
+                        <h3 id="kpi-total-fichas" class="text-2xl font-extrabold text-slate-900 mt-1">0</h3>
+                    </div>
+                    <div class="p-3 bg-slate-100 rounded-xl text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center justify-between">
+                    <span>Em Andamento: <strong id="kpi-andamento" class="text-amber-600">0</strong></span>
+                    <span>Cessados: <strong id="kpi-cessados" class="text-slate-600">0</strong></span>
+                </div>
+            </div>
+
+            <!-- Benefícios Concedidos -->
+            <div class="bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600">Concedidos</p>
+                        <h3 id="kpi-concedidos" class="text-2xl font-extrabold text-emerald-700 mt-1">0</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center justify-between">
+                    <span>Taxa de Sucesso:</span>
+                    <span id="kpi-taxa-sucesso" class="font-bold text-emerald-600">0%</span>
+                </div>
+            </div>
+
+            <!-- Benefícios Indeferidos -->
+            <div class="bg-white rounded-2xl p-5 border border-rose-100 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-rose-600">Indeferidos</p>
+                        <h3 id="kpi-indeferidos" class="text-2xl font-extrabold text-rose-700 mt-1">0</h3>
+                    </div>
+                    <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center justify-between">
+                    <span>Taxa de Indeferimento:</span>
+                    <span id="kpi-taxa-indeferido" class="font-bold text-rose-600">0%</span>
+                </div>
+            </div>
+
+            <!-- Média Tempo DER -> Concessão -->
+            <div class="bg-gradient-to-br from-brand-600 to-indigo-700 rounded-2xl p-5 text-white shadow-md hover:shadow-lg transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-brand-200">Média DER ➔ Concessão</p>
+                        <h3 id="kpi-media-dias" class="text-2xl font-extrabold text-white mt-1">0 dias</h3>
+                    </div>
+                    <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm text-brand-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-brand-100 flex items-center justify-between">
+                    <span>Aproximadamente:</span>
+                    <span id="kpi-media-meses" class="font-bold text-white">0 meses</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="border-b border-slate-200 flex space-x-8 no-print">
+            <button id="tab-btn-fichas" onclick="switchTab('fichas')" class="py-3 px-1 border-b-2 border-brand-600 font-semibold text-brand-600 text-sm flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                </svg>
+                Fichas e Processos
+            </button>
+            <button id="tab-btn-relatorios" onclick="switchTab('relatorios')" class="py-3 px-1 border-b-2 border-transparent font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 text-sm flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Relatório Auxílio-Doença (B31)
+            </button>
+            <button id="tab-btn-banco" onclick="switchTab('banco')" class="py-3 px-1 border-b-2 border-transparent font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 text-sm flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s-8-1.79-8-4"></path>
+                </svg>
+                Banco de Dados e Configurações
+            </button>
+        </div>
+
+        <!-- TAB 1: FICHAS & LISTAGEM -->
+        <section id="tab-fichas" class="space-y-4">
+            <!-- Search & Filters Bar -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center no-print">
+                <div class="relative w-full md:w-96">
+                    <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar por Nome, Ficha, CID ou CP..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <!-- Filter Tipo Beneficio -->
+                    <select id="filter-beneficio" onchange="renderTable()" class="border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        <option value="">Todos Benefícios</option>
+                        <option value="Auxílio-Doença (B31)">Auxílio-Doença (B31)</option>
+                        <option value="Auxílio-Acidente (B36)">Auxílio-Acidente (B36)</option>
+                        <option value="Aposentadoria por Invalidez (B91)">Aposentadoria Invalidez (B91)</option>
+                        <option value="BPC/LOAS Deficiência (B87)">BPC/LOAS Deficiência (B87)</option>
+                        <option value="BPC/LOAS Idoso (B88)">BPC/LOAS Idoso (B88)</option>
+                        <option value="Aposentadoria Idade (B41)">Aposentadoria Idade (B41)</option>
+                        <option value="Aposentadoria Tempo (B42)">Aposentadoria Tempo (B42)</option>
+                        <option value="Pensão por Morte (B21)">Pensão por Morte (B21)</option>
+                        <option value="Outros">Outros Benefícios</option>
+                    </select>
+
+                    <!-- Filter Situacao -->
+                    <select id="filter-situacao" onchange="renderTable()" class="border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        <option value="">Todas as Situações</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Aguardando Perícia">Aguardando Perícia</option>
+                        <option value="Exigência">Exigência</option>
+                        <option value="Concedido">Concedido</option>
+                        <option value="Indeferido">Indeferido</option>
+                        <option value="Cessado">Cessado</option>
+                    </select>
+
+                    <button onclick="resetFilters()" class="text-xs text-slate-500 hover:text-slate-800 underline px-2 py-1">Limpar Filtros</button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold tracking-wider uppercase text-slate-500">
+                                <th class="py-3 px-4">Nº Ficha</th>
+                                <th class="py-3 px-4">Nome Segurado / CID</th>
+                                <th class="py-3 px-4">Tipo Benefício</th>
+                                <th class="py-3 px-4">CP (Concedido Por)</th>
+                                <th class="py-3 px-4">DT DER</th>
+                                <th class="py-3 px-4">DT Perícia</th>
+                                <th class="py-3 px-4">DT Concedido</th>
+                                <th class="py-3 px-4">DT Cessação / Alerta</th>
+                                <th class="py-3 px-4">Situação</th>
+                                <th class="py-3 px-4">Dias Andamento</th>
+                                <th class="py-3 px-4 text-center no-print">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-tbody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically by Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state -->
+                <div id="empty-state" class="hidden text-center py-12 px-4">
+                    <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h3 class="text-base font-semibold text-slate-700">Nenhum registro encontrado</h3>
+                    <p class="text-xs text-slate-500 mt-1">Cadastre uma nova ficha ou ajuste os seus filtros de busca.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: RELATÓRIO EXCLUSIVO AUXÍLIO-DOENÇA (B31) -->
+        <section id="tab-relatorios" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-1 rounded-md">B31</span>
+                        <h2 class="text-lg font-bold text-slate-800">Relatório Exclusivo: Auxílio-Doença</h2>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Análise detalhada de deferimentos, indeferimentos e tempo médio de concessão exclusivamente para Auxílio-Doença.</p>
+                </div>
+                <button onclick="window.print()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    Imprimir Relatório
+                </button>
+            </div>
+
+            <!-- Cards Resumo Auxílio-Doença -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <p class="text-xs font-bold uppercase text-slate-500">Total Auxílio-Doença</p>
+                    <h3 id="b31-total" class="text-2xl font-black text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200/80 shadow-sm">
+                    <p class="text-xs font-bold uppercase text-emerald-700">Concedidos (B31)</p>
+                    <h3 id="b31-concedidos" class="text-2xl font-black text-emerald-800 mt-1">0</h3>
+                </div>
+                <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200/80 shadow-sm">
+                    <p class="text-xs font-bold uppercase text-rose-700">Indeferidos (B31)</p>
+                    <h3 id="b31-indeferidos" class="text-2xl font-black text-rose-800 mt-1">0</h3>
+                </div>
+                <div class="bg-brand-50 p-4 rounded-2xl border border-brand-200/80 shadow-sm">
+                    <p class="text-xs font-bold uppercase text-brand-700">Média DER ➔ Concessão (B31)</p>
+                    <h3 id="b31-media-tempo" class="text-2xl font-black text-brand-900 mt-1">0 dias</h3>
+                </div>
+            </div>
+
+            <!-- Gráfico de Situação e Concessão por Modalidade CP -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfico Status -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Situação do Auxílio-Doença (B31)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chart-benefit-status"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico Modalidade CP -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Concessões por Modalidade CP (Concedido Por)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chart-cp-modalidade"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Analítica de Auxílio-Doença por Modalidade CP -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Detalhamento por Modalidade CP (Auxílio-Doença)</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3 px-4">CP (Concedido Por)</th>
+                                <th class="py-3 px-4 text-center">Total Fichas</th>
+                                <th class="py-3 px-4 text-center text-emerald-700">Concedidos</th>
+                                <th class="py-3 px-4 text-center text-rose-700">Indeferidos</th>
+                                <th class="py-3 px-4 text-center text-amber-700">Em Andamento</th>
+                                <th class="py-3 px-4 text-center">Taxa Concessão (%)</th>
+                                <th class="py-3 px-4 text-center text-brand-700">Média DER ➔ Concessão</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-tbody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: BANCO DE DADOS & CONFIGURAÇÕES -->
+        <section id="tab-banco" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-800 mb-1">Armazenamento e Backup do Banco de Dados</h2>
+                <p class="text-xs text-slate-500">Seus dados são preservados automaticamente para não sumirem. Você também pode exportar backups manuais para segurança adicional ou importar para outro dispositivo.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <!-- Card Backup JSON -->
+                    <div class="border border-slate-200 p-5 rounded-2xl bg-slate-50/50 flex flex-col justify-between">
+                        <div>
+                            <div class="p-3 bg-brand-100 text-brand-700 rounded-xl w-fit mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-slate-800">Exportar Backup (JSON)</h3>
+                            <p class="text-xs text-slate-500 mt-1">Baixe uma cópia completa de todas as suas fichas cadastradas em arquivo seguro.</p>
+                        </div>
+                        <button onclick="exportDataJSON()" class="mt-4 w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2.5 rounded-xl transition">
+                            Baixar JSON
+                        </button>
+                    </div>
+
+                    <!-- Card Importar JSON -->
+                    <div class="border border-slate-200 p-5 rounded-2xl bg-slate-50/50 flex flex-col justify-between">
+                        <div>
+                            <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl w-fit mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-slate-800">Importar Backup (JSON)</h3>
+                            <p class="text-xs text-slate-500 mt-1">Restaure um arquivo JSON salvo anteriormente para atualizar o sistema.</p>
+                        </div>
+                        <label class="mt-4 w-full text-center bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2.5 rounded-xl transition cursor-pointer">
+                            <span>Selecionar Arquivo JSON</span>
+                            <input type="file" id="import-json-file" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                        </label>
+                    </div>
+
+                    <!-- Card Exportar CSV (Excel) -->
+                    <div class="border border-slate-200 p-5 rounded-2xl bg-slate-50/50 flex flex-col justify-between">
+                        <div>
+                            <div class="p-3 bg-amber-100 text-amber-700 rounded-xl w-fit mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-slate-800">Exportar para Excel (CSV)</h3>
+                            <p class="text-xs text-slate-500 mt-1">Gere uma planilha compatível com Excel para relatórios externos.</p>
+                        </div>
+                        <button onclick="exportDataCSV()" class="mt-4 w-full bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-2.5 rounded-xl transition">
+                            Baixar Planilha CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Test Data & System Management -->
+                <div class="mt-8 pt-6 border-t border-slate-200 flex flex-wrap gap-4 justify-between items-center">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-800">Ações de Manutenção do Sistema</h4>
+                        <p class="text-xs text-slate-500">Gere dados fictícios para testes ou limpe o banco de dados.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="generateSampleData()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold px-4 py-2 rounded-xl transition">
+                            + Gerar Exemplo de Teste
+                        </button>
+                        <button onclick="confirmClearAll()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-4 py-2 rounded-xl transition">
+                            Apagar Todo o Banco
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE CADASTRO E EDIÇÃO -->
+    <div id="record-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col transform transition-all">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-base font-bold">Nova Ficha Previdenciária</h3>
+                <button onclick="closeModal('record-modal')" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="record-form" onsubmit="handleSaveRecord(event)" class="p-6 overflow-y-auto space-y-4">
+                <input type="hidden" id="field-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- NÚMERO DA FICHA -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Número da Ficha *</label>
+                        <input type="text" id="field-numeroFicha" required placeholder="Ex: F-2026-001" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+
+                    <!-- NOME DO SEGURADO -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome do Segurado *</label>
+                        <input type="text" id="field-nome" required placeholder="Nome completo do cliente" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+
+                    <!-- TIPO DE BENEFÍCIO -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Benefício *</label>
+                        <select id="field-tipoBeneficio" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                            <option value="Auxílio-Doença (B31)">Auxílio-Doença (B31)</option>
+                            <option value="Auxílio-Acidente (B36)">Auxílio-Acidente (B36)</option>
+                            <option value="Aposentadoria por Invalidez (B91)">Aposentadoria Invalidez (B91)</option>
+                            <option value="BPC/LOAS Deficiência (B87)">BPC/LOAS Deficiência (B87)</option>
+                            <option value="BPC/LOAS Idoso (B88)">BPC/LOAS Idoso (B88)</option>
+                            <option value="Aposentadoria Idade (B41)">Aposentadoria Idade (B41)</option>
+                            <option value="Aposentadoria Tempo (B42)">Aposentadoria Tempo (B42)</option>
+                            <option value="Pensão por Morte (B21)">Pensão por Morte (B21)</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <!-- CID -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">CID (Código de Doença)</label>
+                        <input type="text" id="field-cid" placeholder="Ex: M54.5" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+
+                    <!-- CP (CONCEDIDO POR) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">CP (Concedido Por)</label>
+                        <select id="field-cp" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                            <option value="">Selecione a modalidade...</option>
+                            <option value="Análise Documental">Análise Documental (Atestmed)</option>
+                            <option value="Perícia Médica">Perícia Médica Presencial</option>
+                            <option value="Perícia Telemedicina">Perícia Telemedicina</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <!-- SITUAÇÃO -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Situação do Processo *</label>
+                        <select id="field-situacao" required onchange="handleSituacaoChange()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Aguardando Perícia">Aguardando Perícia</option>
+                            <option value="Exigência">Exigência</option>
+                            <option value="Concedido">Concedido</option>
+                            <option value="Indeferido">Indeferido</option>
+                            <option value="Cessado">Cessado</option>
+                        </select>
+                    </div>
+
+                    <!-- DT DER -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DT DER (Data do Requerimento) *</label>
+                        <input type="date" id="field-dtDer" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+
+                    <!-- DT PERÍCIA -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DT Perícia</label>
+                        <input type="date" id="field-dtPericia" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+
+                    <!-- DT CONCEDIDO -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DT Concedido</label>
+                        <input type="date" id="field-dtConcedido" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+
+                    <!-- DT CESSAÇÃO -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DT Cessação</label>
+                        <input type="date" id="field-dtCessacao" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- OBSERVAÇÕES -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Observações (OBS)</label>
+                    <textarea id="field-obs" rows="3" placeholder="Informações complementares, número do benefício NB, detalhes do processo judicial ou administrativo..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"></textarea>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="pt-4 border-t border-slate-200 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('record-modal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-semibold transition shadow-md">Salvar Ficha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE VISUALIZAÇÃO DE OBSERVAÇÕES -->
+    <div id="obs-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <h3 id="obs-modal-title" class="text-base font-bold text-slate-900">Observações da Ficha</h3>
+            <div id="obs-modal-body" class="bg-slate-50 p-4 rounded-xl text-sm text-slate-700 border border-slate-200 whitespace-pre-wrap max-h-60 overflow-y-auto"></div>
+            <div class="flex justify-end">
+                <button onclick="closeModal('obs-modal')" class="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO CUSTOMIZADO -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 text-center">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h3 id="confirm-title" class="text-base font-bold text-slate-900">Confirmar Ação</h3>
+            <p id="confirm-message" class="text-sm text-slate-600">Tem certeza que deseja realizar esta operação?</p>
+            <div class="flex justify-center space-x-3 pt-2">
+                <button onclick="closeModal('confirm-modal')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50">Cancelar</button>
+                <button id="confirm-action-btn" class="px-5 py-2 bg-rose-600 text-white rounded-xl text-sm font-semibold hover:bg-rose-700 shadow-md">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- FIREBASE & CORE APPLICATION LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global State
+        window.recordsData = [];
+        window.isFirebaseActive = false;
+        let db = null;
+        let auth = null;
+        let chartInstance = null;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'prev-gestao-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase or LocalStorage
+        async function initStorage() {
+            if (firebaseConfig) {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    // Strict mandatory Firestore collection path: /artifacts/{appId}/public/data/fichas_beneficios
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'fichas_beneficios');
+
+                    onSnapshot(colRef, (snapshot) => {
+                        const items = [];
+                        snapshot.forEach((docSnap) => {
+                            items.push({ id: docSnap.id, ...docSnap.data() });
+                        });
+                        window.recordsData = items;
+                        localStorage.setItem('prev_records_backup', JSON.stringify(items));
+                        updateUI();
+                    }, (err) => {
+                        console.warn("Firestore listener error, using localStorage fallback:", err);
+                        loadLocalFallback();
+                    });
+
+                    window.isFirebaseActive = true;
+                    updateDbStatusBadge(true, "Conectado (Nuvem)");
+                    return;
+                } catch (e) {
+                    console.warn("Firebase initialization error, fallback to localStorage:", e);
+                }
+            }
+
+            loadLocalFallback();
+        }
+
+        function loadLocalFallback() {
+            window.isFirebaseActive = false;
+            const saved = localStorage.getItem('prev_records_backup');
+            if (saved) {
+                try {
+                    window.recordsData = JSON.parse(saved);
+                } catch (e) {
+                    window.recordsData = [];
+                }
+            } else {
+                window.recordsData = [];
+            }
+            updateDbStatusBadge(false, "Modo Local (Offline/Navegador)");
+            updateUI();
+        }
+
+        function updateDbStatusBadge(online, text) {
+            const badge = document.getElementById('db-status-badge');
+            const pulse = document.getElementById('db-pulse');
+            const dot = document.getElementById('db-dot');
+            const txt = document.getElementById('db-status-text');
+
+            if (badge) badge.classList.remove('hidden');
+            if (txt) txt.textContent = text;
+
+            if (online) {
+                pulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+            } else {
+                pulse.className = "hidden";
+                dot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
+            }
+        }
+
+        // Save or Update Record
+        window.saveRecordToDb = async function(record) {
+            if (window.isFirebaseActive && db) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'fichas_beneficios', record.id);
+                    await setDoc(docRef, record);
+                    showToast("Ficha salva no banco de dados na nuvem!", "success");
+                } catch (err) {
+                    console.error("Error saving to Firestore:", err);
+                    saveToLocalStorageDirectly(record);
+                }
+            } else {
+                saveToLocalStorageDirectly(record);
+            }
+        };
+
+        function saveToLocalStorageDirectly(record) {
+            const idx = window.recordsData.findIndex(r => r.id === record.id);
+            if (idx >= 0) {
+                window.recordsData[idx] = record;
+            } else {
+                window.recordsData.push(record);
+            }
+            localStorage.setItem('prev_records_backup', JSON.stringify(window.recordsData));
+            showToast("Ficha salva localmente com sucesso!", "success");
+            updateUI();
+        }
+
+        // Delete Record
+        window.deleteRecordFromDb = async function(id) {
+            if (window.isFirebaseActive && db) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'fichas_beneficios', id);
+                    await deleteDoc(docRef);
+                    showToast("Ficha removida com sucesso!", "info");
+                } catch (err) {
+                    console.error("Error deleting from Firestore:", err);
+                    deleteFromLocalDirectly(id);
+                }
+            } else {
+                deleteFromLocalDirectly(id);
+            }
+        };
+
+        function deleteFromLocalDirectly(id) {
+            window.recordsData = window.recordsData.filter(r => r.id !== id);
+            localStorage.setItem('prev_records_backup', JSON.stringify(window.recordsData));
+            showToast("Ficha removida localmente!", "info");
+            updateUI();
+        }
+
+        window.clearAllDbRecords = async function() {
+            window.recordsData = [];
+            localStorage.removeItem('prev_records_backup');
+            if (window.isFirebaseActive && db) {
+                // Remove each record
+                showToast("Limpando banco...", "info");
+            }
+            updateUI();
+            showToast("Banco de dados completamente zerado.", "info");
+        };
+
+        // Initialize on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            initStorage();
+        });
+    </script>
+
+    <!-- APPLICAITON LOGIC & CALCULATIONS -->
+    <script>
+        let chartCpInstance = null;
+
+        function switchTab(tabId) {
+            const tabs = ['fichas', 'relatorios', 'banco'];
+            tabs.forEach(id => {
+                const section = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`tab-btn-${id}`);
+                if (section) {
+                    if (id === tabId) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                }
+                if (btn) {
+                    if (id === tabId) {
+                        btn.className = "py-3 px-1 border-b-2 border-brand-600 font-semibold text-brand-600 text-sm flex items-center gap-2";
+                    } else {
+                        btn.className = "py-3 px-1 border-b-2 border-transparent font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 text-sm flex items-center gap-2";
+                    }
+                }
+            });
+
+            if (tabId === 'relatorios') {
+                renderReports();
+            }
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            if (modalId === 'record-modal' && !document.getElementById('field-id').value) {
+                document.getElementById('record-form').reset();
+                document.getElementById('field-id').value = '';
+                document.getElementById('modal-title').textContent = 'Nova Ficha Previdenciária';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            if (modalId === 'record-modal') {
+                document.getElementById('record-form').reset();
+                document.getElementById('field-id').value = '';
+            }
+        }
+
+        function resetFilters() {
+            const search = document.getElementById('filter-search');
+            const beneficio = document.getElementById('filter-beneficio');
+            const situacao = document.getElementById('filter-situacao');
+
+            if (search) search.value = '';
+            if (beneficio) beneficio.value = '';
+            if (situacao) situacao.value = '';
+
+            renderTable();
+        }
+
+        function handleSituacaoChange() {
+            const situacao = document.getElementById('field-situacao')?.value;
+            const dtConcedidoInput = document.getElementById('field-dtConcedido');
+            
+            if (situacao === 'Concedido' && dtConcedidoInput && !dtConcedidoInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                dtConcedidoInput.value = today;
+            }
+        }
+
+        function getSituacaoBadge(situacao) {
+            switch (situacao) {
+                case 'Concedido':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Concedido</span>`;
+                case 'Indeferido':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Indeferido</span>`;
+                case 'Em Andamento':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Em Andamento</span>`;
+                case 'Aguardando Perícia':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800">Aguardando Perícia</span>`;
+                case 'Exigência':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Exigência</span>`;
+                case 'Cessado':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">Cessado</span>`;
+                default:
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">${escapeHtml(situacao || '-')}</span>`;
+            }
+        }
+
+        function handleSaveRecord(e) {
+            e.preventDefault();
+
+            const recordId = document.getElementById('field-id').value || 'rec_' + Date.now();
+
+            const record = {
+                id: recordId,
+                numeroFicha: document.getElementById('field-numeroFicha').value,
+                nome: document.getElementById('field-nome').value,
+                tipoBeneficio: document.getElementById('field-tipoBeneficio').value,
+                cid: document.getElementById('field-cid').value,
+                cp: document.getElementById('field-cp').value,
+                situacao: document.getElementById('field-situacao').value,
+                dtDer: document.getElementById('field-dtDer').value,
+                dtPericia: document.getElementById('field-dtPericia').value || null,
+                dtConcedido: document.getElementById('field-dtConcedido').value || null,
+                dtCessacao: document.getElementById('field-dtCessacao').value || null,
+                obs: document.getElementById('field-obs').value
+            };
+
+            if (typeof window.saveRecordToDb === 'function') {
+                window.saveRecordToDb(record);
+            }
+
+            closeModal('record-modal');
+        }
+
+        function editRecord(id) {
+            const record = (window.recordsData || []).find(r => r.id === id);
+            if (!record) return;
+
+            document.getElementById('field-id').value = record.id;
+            document.getElementById('field-numeroFicha').value = record.numeroFicha || '';
+            document.getElementById('field-nome').value = record.nome || '';
+            document.getElementById('field-tipoBeneficio').value = record.tipoBeneficio || 'Auxílio-Doença (B31)';
+            document.getElementById('field-cid').value = record.cid || '';
+            document.getElementById('field-cp').value = record.cp || '';
+            document.getElementById('field-situacao').value = record.situacao || 'Em Andamento';
+            document.getElementById('field-dtDer').value = record.dtDer || '';
+            document.getElementById('field-dtPericia').value = record.dtPericia || '';
+            document.getElementById('field-dtConcedido').value = record.dtConcedido || '';
+            document.getElementById('field-dtCessacao').value = record.dtCessacao || '';
+            document.getElementById('field-obs').value = record.obs || '';
+
+            document.getElementById('modal-title').textContent = 'Editar Ficha Previdenciária';
+            openModal('record-modal');
+        }
+
+        function confirmDeleteRecord(id) {
+            const record = (window.recordsData || []).find(r => r.id === id);
+            if (!record) return;
+
+            document.getElementById('confirm-title').textContent = 'Excluir Ficha';
+            document.getElementById('confirm-message').textContent = `Tem certeza que deseja excluir a ficha "${record.numeroFicha}" (${record.nome})?`;
+
+            const btn = document.getElementById('confirm-action-btn');
+            btn.onclick = function() {
+                if (typeof window.deleteRecordFromDb === 'function') {
+                    window.deleteRecordFromDb(id);
+                }
+                closeModal('confirm-modal');
+            };
+
+            openModal('confirm-modal');
+        }
+
+        function openObsModal(id) {
+            const record = (window.recordsData || []).find(r => r.id === id);
+            if (!record) return;
+
+            document.getElementById('obs-modal-title').textContent = `Observações - Ficha ${record.numeroFicha}`;
+            document.getElementById('obs-modal-body').textContent = record.obs || 'Nenhuma observação registrada.';
+            openModal('obs-modal');
+        }
+
+        function exportDataJSON() {
+            const dataStr = JSON.stringify(window.recordsData || [], null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup_fichas_prevgestao_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Backup JSON exportado com sucesso!', 'success');
+        }
+
+        function importDataJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        imported.forEach(r => {
+                            if (r.id && r.numeroFicha && typeof window.saveRecordToDb === 'function') {
+                                window.saveRecordToDb(r);
+                            }
+                        });
+                        showToast(`${imported.length} fichas importadas com sucesso!`, 'success');
+                    } else {
+                        showToast('Formato JSON inválido. Esperado uma lista de fichas.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Erro ao ler o arquivo JSON.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function exportDataCSV() {
+            const records = window.recordsData || [];
+            if (records.length === 0) {
+                showToast('Nenhum dado disponível para exportar.', 'error');
+                return;
+            }
+
+            const headers = ['Nº Ficha', 'Nome', 'Tipo Benefício', 'CID', 'CP', 'Situação', 'DT DER', 'DT Perícia', 'DT Concedido', 'DT Cessação', 'Observações'];
+            
+            const rows = records.map(r => [
+                `"${(r.numeroFicha || '').replace(/"/g, '""')}"`,
+                `"${(r.nome || '').replace(/"/g, '""')}"`,
+                `"${(r.tipoBeneficio || '').replace(/"/g, '""')}"`,
+                `"${(r.cid || '').replace(/"/g, '""')}"`,
+                `"${(r.cp || '').replace(/"/g, '""')}"`,
+                `"${(r.situacao || '').replace(/"/g, '""')}"`,
+                `"${r.dtDer || ''}"`,
+                `"${r.dtPericia || ''}"`,
+                `"${r.dtConcedido || ''}"`,
+                `"${r.dtCessacao || ''}"`,
+                `"${(r.obs || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(row => row.join(';'))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `fichas_prevgestao_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Planilha CSV/Excel gerada com sucesso!', 'success');
+        }
+
+        function confirmClearAll() {
+            document.getElementById('confirm-title').textContent = 'Apagar Todo o Banco';
+            document.getElementById('confirm-message').textContent = 'ATENÇÃO: Esta ação apagarar TODAS as fichas cadastradas no sistema. Deseja continuar?';
+
+            const btn = document.getElementById('confirm-action-btn');
+            btn.onclick = function() {
+                if (typeof window.clearAllDbRecords === 'function') {
+                    window.clearAllDbRecords();
+                }
+                closeModal('confirm-modal');
+            };
+
+            openModal('confirm-modal');
+        }
+
+        // Calculate Days in Progress (Dias em Andamento / Concessão)
+        function calculateRecordDays(record) {
+            if (!record.dtDer) return 0;
+
+            const derDate = new Date(record.dtDer + 'T00:00:00');
+            if (isNaN(derDate.getTime())) return 0;
+
+            let endDate = new Date();
+
+            if (record.situacao === 'Concedido' && record.dtConcedido) {
+                endDate = new Date(record.dtConcedido + 'T00:00:00');
+            } else if (record.situacao === 'Cessado' && record.dtCessacao) {
+                endDate = new Date(record.dtCessacao + 'T00:00:00');
+            } else if (record.dtConcedido) {
+                endDate = new Date(record.dtConcedido + 'T00:00:00');
+            }
+
+            const diffTime = endDate.getTime() - derDate.getTime();
+            const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+            return diffDays;
+        }
+
+        // Sistema de Alerta para Data de Cessação (DT Cessação)
+        function getCessacaoAlertBadge(dtCessacaoStr, situacao) {
+            if (!dtCessacaoStr || situacao === 'Cessado' || situacao === 'Indeferido') return '';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const [year, month, day] = dtCessacaoStr.split('-').map(Number);
+            if (!year || !month || !day) return '';
+
+            const cessDate = new Date(year, month - 1, day);
+            cessDate.setHours(0, 0, 0, 0);
+
+            const diffTime = cessDate.getTime() - today.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            // Se ultrapassar o dia da cessação (< 0): Não mostrar nada
+            if (diffDays < 0) {
+                return '';
+            }
+
+            // No dia exato da cessação (0 dias): VERDE como positivo
+            if (diffDays === 0) {
+                return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Cessa Hoje (Dia Exato)
+                </span></div>`;
+            }
+
+            // Menos de 5 dias (1 a 5 dias): VERMELHO
+            if (diffDays <= 5) {
+                return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                    <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                    Alerta: Cessa em ${diffDays} dia(s)
+                </span></div>`;
+            }
+
+            // Menos de 15 dias (6 a 15 dias): AMARELO
+            if (diffDays <= 15) {
+                return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Atenção: Cessa em ${diffDays} dia(s)
+                </span></div>`;
+            }
+
+            // Se for maior que 15 dias: Não exibe alerta de urgência
+            return '';
+        }
+
+        // Format Date to Brazilian Format DD/MM/YYYY
+        function formatDateBR(dateString) {
+            if (!dateString) return '-';
+            const [year, month, day] = dateString.split('-');
+            if (!year || !month || !day) return dateString;
+            return `${day}/${month}/${year}`;
+        }
+
+        // UI Rendering & Refreshing
+        function updateUI() {
+            renderKPIs();
+            renderTable();
+            renderReports();
+        }
+
+        function renderKPIs() {
+            const data = window.recordsData || [];
+
+            const total = data.length;
+            const concedidos = data.filter(r => r.situacao === 'Concedido').length;
+            const indeferidos = data.filter(r => r.situacao === 'Indeferido').length;
+            const andamento = data.filter(r => ['Em Andamento', 'Aguardando Perícia', 'Exigência'].includes(r.situacao)).length;
+            const cessados = data.filter(r => r.situacao === 'Cessado').length;
+
+            document.getElementById('kpi-total-fichas').textContent = total;
+            document.getElementById('kpi-concedidos').textContent = concedidos;
+            document.getElementById('kpi-indeferidos').textContent = indeferidos;
+            document.getElementById('kpi-andamento').textContent = andamento;
+            document.getElementById('kpi-cessados').textContent = cessados;
+
+            const finalizados = concedidos + indeferidos;
+            const taxaSucesso = finalizados > 0 ? Math.round((concedidos / finalizados) * 100) : 0;
+            const taxaIndeferido = finalizados > 0 ? Math.round((indeferidos / finalizados) * 100) : 0;
+
+            document.getElementById('kpi-taxa-sucesso').textContent = `${taxaSucesso}%`;
+            document.getElementById('kpi-taxa-indeferido').textContent = `${taxaIndeferido}%`;
+
+            const concedidosComDatas = data.filter(r => r.situacao === 'Concedido' && r.dtDer && r.dtConcedido);
+            let somaDias = 0;
+
+            concedidosComDatas.forEach(r => {
+                somaDias += calculateRecordDays(r);
+            });
+
+            const mediaDias = concedidosComDatas.length > 0 ? Math.round(somaDias / concedidosComDatas.length) : 0;
+            const mediaMeses = (mediaDias / 30.43).toFixed(1);
+
+            document.getElementById('kpi-media-dias').textContent = `${mediaDias} dias`;
+            document.getElementById('kpi-media-meses').textContent = `~ ${mediaMeses} meses`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('records-tbody');
+            const emptyState = document.getElementById('empty-state');
+            if (!tbody) return;
+
+            const search = (document.getElementById('filter-search')?.value || '').toLowerCase();
+            const beneficioFilter = document.getElementById('filter-beneficio')?.value || '';
+            const situacaoFilter = document.getElementById('filter-situacao')?.value || '';
+
+            let filtered = (window.recordsData || []).filter(r => {
+                const matchSearch = (
+                    (r.nome || '').toLowerCase().includes(search) ||
+                    (r.numeroFicha || '').toLowerCase().includes(search) ||
+                    (r.cid || '').toLowerCase().includes(search) ||
+                    (r.cp || '').toLowerCase().includes(search)
+                );
+                const matchBeneficio = !beneficioFilter || r.tipoBeneficio === beneficioFilter;
+                const matchSituacao = !situacaoFilter || r.situacao === situacaoFilter;
+
+                return matchSearch && matchBeneficio && matchSituacao;
+            });
+
+            filtered.sort((a, b) => (b.id > a.id ? 1 : -1));
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            tbody.innerHTML = filtered.map(r => {
+                const diasAndamento = calculateRecordDays(r);
+                const badgeSituacao = getSituacaoBadge(r.situacao);
+                const alertCessacao = getCessacaoAlertBadge(r.dtCessacao, r.situacao);
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-900">${escapeHtml(r.numeroFicha)}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-medium text-slate-800">${escapeHtml(r.nome)}</div>
+                            ${r.cid ? `<div class="text-xs text-slate-500">CID: <span class="font-mono font-semibold text-slate-700">${escapeHtml(r.cid)}</span></div>` : ''}
+                        </td>
+                        <td class="py-3.5 px-4 text-xs font-semibold text-slate-700">${escapeHtml(r.tipoBeneficio)}</td>
+                        <td class="py-3.5 px-4 text-xs font-semibold text-brand-700 bg-brand-50/40 rounded-lg px-2 py-1 inline-block my-2">${escapeHtml(r.cp || 'Não Informado')}</td>
+                        <td class="py-3.5 px-4 text-xs font-medium text-slate-700">${formatDateBR(r.dtDer)}</td>
+                        <td class="py-3.5 px-4 text-xs text-slate-600">${formatDateBR(r.dtPericia)}</td>
+                        <td class="py-3.5 px-4 text-xs text-slate-600">${formatDateBR(r.dtConcedido)}</td>
+                        <td class="py-3.5 px-4 text-xs text-slate-600">
+                            <div>${formatDateBR(r.dtCessacao)}</div>
+                            ${alertCessacao}
+                        </td>
+                        <td class="py-3.5 px-4">${badgeSituacao}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">
+                                ${diasAndamento} dias
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-center no-print">
+                            <div class="flex items-center justify-center space-x-2">
+                                ${r.obs ? `
+                                    <button onclick="openObsModal('${r.id}')" title="Ver Observações" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                ` : ''}
+                                <button onclick="editRecord('${r.id}')" title="Editar Ficha" class="p-1.5 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </button>
+                                <button onclick="confirmDeleteRecord('${r.id}')" title="Excluir Ficha" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // RELATÓRIO EXCLUSIVO AUXÍLIO-DOENÇA (B31)
+        function renderReports() {
+            const reportTbody = document.getElementById('report-tbody');
+            if (!reportTbody) return;
+
+            // Filtrar estritamente apenas Auxílio-Doença (B31)
+            const b31Data = (window.recordsData || []).filter(r => r.tipoBeneficio === 'Auxílio-Doença (B31)');
+
+            const totalB31 = b31Data.length;
+            const concedidosB31 = b31Data.filter(r => r.situacao === 'Concedido').length;
+            const indeferidosB31 = b31Data.filter(r => r.situacao === 'Indeferido').length;
+            const andamentoB31 = b31Data.filter(r => ['Em Andamento', 'Aguardando Perícia', 'Exigência'].includes(r.situacao)).length;
+
+            // Tempo médio de concessão B31
+            const concedidosComDatasB31 = b31Data.filter(r => r.situacao === 'Concedido' && r.dtDer && r.dtConcedido);
+            let somaDiasB31 = 0;
+            concedidosComDatasB31.forEach(r => somaDiasB31 += calculateRecordDays(r));
+            const mediaDiasB31 = concedidosComDatasB31.length > 0 ? Math.round(somaDiasB31 / concedidosComDatasB31.length) : 0;
+
+            // Atualiza KPI Cards Auxílio-Doença
+            document.getElementById('b31-total').textContent = totalB31;
+            document.getElementById('b31-concedidos').textContent = concedidosB31;
+            document.getElementById('b31-indeferidos').textContent = indeferidosB31;
+            document.getElementById('b31-media-tempo').textContent = `${mediaDiasB31} dias`;
+
+            // Agrupar por Modalidade CP (Concedido Por)
+            const cpTypes = ['Análise Documental', 'Perícia Médica', 'Perícia Telemedicina', 'Outros'];
+            const cpStats = {};
+            cpTypes.forEach(cp => {
+                cpStats[cp] = { total: 0, concedidos: 0, indeferidos: 0, andamento: 0, somaDias: 0, qtdDatas: 0 };
+            });
+
+            b31Data.forEach(r => {
+                const cpKey = cpTypes.includes(r.cp) ? r.cp : 'Outros';
+                cpStats[cpKey].total++;
+                if (r.situacao === 'Concedido') {
+                    cpStats[cpKey].concedidos++;
+                    if (r.dtDer && r.dtConcedido) {
+                        cpStats[cpKey].somaDias += calculateRecordDays(r);
+                        cpStats[cpKey].qtdDatas++;
+                    }
+                } else if (r.situacao === 'Indeferido') {
+                    cpStats[cpKey].indeferidos++;
+                } else {
+                    cpStats[cpKey].andamento++;
+                }
+            });
+
+            // Tabela por CP no Auxílio-Doença
+            reportTbody.innerHTML = cpTypes.map(cp => {
+                const s = cpStats[cp];
+                const finalizados = s.concedidos + s.indeferidos;
+                const taxaConcessao = finalizados > 0 ? ((s.concedidos / finalizados) * 100).toFixed(1) : '0.0';
+                const mediaDiasCp = s.qtdDatas > 0 ? Math.round(s.somaDias / s.qtdDatas) : 0;
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-bold text-slate-800">${escapeHtml(cp)}</td>
+                        <td class="py-3 px-4 text-center font-bold text-slate-900">${s.total}</td>
+                        <td class="py-3 px-4 text-center text-emerald-700 font-bold bg-emerald-50/50">${s.concedidos}</td>
+                        <td class="py-3 px-4 text-center text-rose-700 font-bold bg-rose-50/50">${s.indeferidos}</td>
+                        <td class="py-3 px-4 text-center text-amber-700 font-medium">${s.andamento}</td>
+                        <td class="py-3 px-4 text-center font-bold ${parseFloat(taxaConcessao) >= 50 ? 'text-emerald-600' : 'text-slate-600'}">${taxaConcessao}%</td>
+                        <td class="py-3 px-4 text-center font-bold text-brand-700">${mediaDiasCp > 0 ? `${mediaDiasCp} dias` : '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Gráfico 1: Situação Geral de Auxílio-Doença
+            const ctxStatus = document.getElementById('chart-benefit-status');
+            if (ctxStatus) {
+                if (window.chartInstance) window.chartInstance.destroy();
+
+                window.chartInstance = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Concedidos', 'Indeferidos', 'Em Andamento'],
+                        datasets: [{
+                            data: [concedidosB31, indeferidosB31, andamentoB31],
+                            backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'],
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+
+            // Gráfico 2: Concessões por Modalidade CP
+            const ctxCp = document.getElementById('chart-cp-modalidade');
+            if (ctxCp) {
+                if (window.chartCpInstance) window.chartCpInstance.destroy();
+
+                window.chartCpInstance = new Chart(ctxCp, {
+                    type: 'bar',
+                    data: {
+                        labels: cpTypes,
+                        datasets: [
+                            {
+                                label: 'Concedidos',
+                                data: cpTypes.map(cp => cpStats[cp].concedidos),
+                                backgroundColor: '#0284c7',
+                                borderRadius: 6
+                            },
+                            {
+                                label: 'Indeferidos',
+                                data: cpTypes.map(cp => cpStats[cp].indeferidos),
+                                backgroundColor: '#f43f5e',
+                                borderRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+            }
+        }
+
+        // Generate Sample Dummy Records for Testing
+        function generateSampleData() {
+            const today = new Date();
+            const formatDate = (daysOffset) => {
+                const d = new Date(today);
+                d.setDate(d.getDate() + daysOffset);
+                return d.toISOString().split('T')[0];
+            };
+
+            const samples = [
+                { id: 'rec_001', numeroFicha: 'F-2026-001', nome: 'Maria Aparecida da Silva', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'M54.5', cp: 'Análise Documental', situacao: 'Concedido', dtDer: '2026-01-10', dtPericia: '2026-01-20', dtConcedido: '2026-02-01', dtCessacao: formatDate(10), obs: 'Benefício concedido por análise documental via Atestmed.' },
+                { id: 'rec_002', numeroFicha: 'F-2026-002', nome: 'João Carlos Pereira', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'I10', cp: 'Perícia Médica', situacao: 'Concedido', dtDer: '2026-01-15', dtPericia: '2026-02-10', dtConcedido: '2026-02-25', dtCessacao: formatDate(3), obs: 'Alerta crítico de cessação em menos de 5 dias!' },
+                { id: 'rec_003', numeroFicha: 'F-2026-003', nome: 'Ana Lucia Rodrigues', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'F32', cp: 'Análise Documental', situacao: 'Concedido', dtDer: '2026-02-01', dtPericia: null, dtConcedido: '2026-02-15', dtCessacao: formatDate(0), obs: 'Cessa exatamente hoje.' },
+                { id: 'rec_004', numeroFicha: 'F-2026-004', nome: 'Carlos Eduardo Santos', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'S82', cp: 'Perícia Médica', situacao: 'Indeferido', dtDer: '2026-01-20', dtPericia: '2026-02-20', dtConcedido: null, dtCessacao: null, obs: 'Perícia do INSS indeferiu. Ajuizada ação.' },
+                { id: 'rec_005', numeroFicha: 'F-2026-005', nome: 'Francisca das Chagas', tipoBeneficio: 'Aposentadoria Idade (B41)', cid: '-', cp: 'Outros', situacao: 'Concedido', dtDer: '2026-02-01', dtPericia: null, dtConcedido: '2026-03-01', dtCessacao: null, obs: 'Aposentadoria concedida.' }
+            ];
+
+            samples.forEach(s => window.saveRecordToDb(s));
+            showToast("5 fichas de teste inseridas!", "success");
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-xl text-xs font-bold text-white transition transform duration-300 translate-y-2 pointer-events-auto flex items-center space-x-2 ${
+                type === 'success' ? 'bg-emerald-600' :
+                type === 'error' ? 'bg-rose-600' :
+                'bg-slate-800'
+            }`;
+
+            toast.innerHTML = `
+                <span>${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
