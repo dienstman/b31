@@ -475,14 +475,6 @@
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Benefício *</label>
                         <select id="field-tipoBeneficio" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                             <option value="Auxílio-Doença (B31)">Auxílio-Doença (B31)</option>
-                            <option value="Auxílio-Acidente (B36)">Auxílio-Acidente (B36)</option>
-                            <option value="Aposentadoria por Invalidez (B91)">Aposentadoria Invalidez (B91)</option>
-                            <option value="BPC/LOAS Deficiência (B87)">BPC/LOAS Deficiência (B87)</option>
-                            <option value="BPC/LOAS Idoso (B88)">BPC/LOAS Idoso (B88)</option>
-                            <option value="Aposentadoria Idade (B41)">Aposentadoria Idade (B41)</option>
-                            <option value="Aposentadoria Tempo (B42)">Aposentadoria Tempo (B42)</option>
-                            <option value="Pensão por Morte (B21)">Pensão por Morte (B21)</option>
-                            <option value="Outros">Outros</option>
                         </select>
                     </div>
 
@@ -877,7 +869,13 @@
             document.getElementById('field-id').value = record.id;
             document.getElementById('field-numeroFicha').value = record.numeroFicha || '';
             document.getElementById('field-nome').value = record.nome || '';
-            document.getElementById('field-tipoBeneficio').value = record.tipoBeneficio || 'Auxílio-Doença (B31)';
+            
+            const tbSelect = document.getElementById('field-tipoBeneficio');
+            if (record.tipoBeneficio && !Array.from(tbSelect.options).some(o => o.value === record.tipoBeneficio)) {
+                tbSelect.add(new Option(record.tipoBeneficio, record.tipoBeneficio));
+            }
+            tbSelect.value = record.tipoBeneficio || 'Auxílio-Doença (B31)';
+            
             document.getElementById('field-cid').value = record.cid || '';
             document.getElementById('field-cp').value = record.cp || '';
             document.getElementById('field-situacao').value = record.situacao || 'Em Andamento';
@@ -1031,6 +1029,53 @@
             return diffDays;
         }
 
+        function getPericiaAlertBadge(dtPericiaStr, situacao) {
+            if (!dtPericiaStr || situacao === 'Concedido' || situacao === 'Indeferido' || situacao === 'Cessado') return '';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const [year, month, day] = dtPericiaStr.split('-').map(Number);
+            if (!year || !month || !day) return '';
+
+            const periciaDate = new Date(year, month - 1, day);
+            periciaDate.setHours(0, 0, 0, 0);
+
+            const diffTime = periciaDate.getTime() - today.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            // Se a data já passou, não exibimos alerta (para evitar confusão caso ainda não tenham atualizado o status)
+            if (diffDays < 0) {
+                return '';
+            }
+
+            // Exatamente Hoje
+            if (diffDays === 0) {
+                return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                    <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                    Perícia Hoje
+                </span></div>`;
+            }
+
+            // Faltam 5 dias ou menos
+            if (diffDays <= 5) {
+                return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                    <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                    Faltam ${diffDays} dia(s)
+                </span></div>`;
+            }
+
+            // Faltam 15 dias ou menos
+            if (diffDays <= 15) {
+                return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Faltam ${diffDays} dia(s)
+                </span></div>`;
+            }
+
+            return '';
+        }
+
         // Sistema de Alerta para Data de Cessação (DT Cessação)
         function getCessacaoAlertBadge(dtCessacaoStr, situacao) {
             if (!dtCessacaoStr || situacao === 'Cessado' || situacao === 'Indeferido') return '';
@@ -1167,6 +1212,7 @@
                 const diasAndamento = calculateRecordDays(r);
                 const badgeSituacao = getSituacaoBadge(r.situacao);
                 const alertCessacao = getCessacaoAlertBadge(r.dtCessacao, r.situacao);
+                const alertPericia = getPericiaAlertBadge(r.dtPericia, r.situacao);
 
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
@@ -1178,7 +1224,10 @@
                         <td class="py-3.5 px-4 text-xs font-semibold text-slate-700">${escapeHtml(r.tipoBeneficio)}</td>
                         <td class="py-3.5 px-4 text-xs font-semibold text-brand-700 bg-brand-50/40 rounded-lg px-2 py-1 inline-block my-2">${escapeHtml(r.cp || 'Não Informado')}</td>
                         <td class="py-3.5 px-4 text-xs font-medium text-slate-700">${formatDateBR(r.dtDer)}</td>
-                        <td class="py-3.5 px-4 text-xs text-slate-600">${formatDateBR(r.dtPericia)}</td>
+                        <td class="py-3.5 px-4 text-xs text-slate-600">
+                            <div>${formatDateBR(r.dtPericia)}</div>
+                            ${alertPericia}
+                        </td>
                         <td class="py-3.5 px-4 text-xs text-slate-600">${formatDateBR(r.dtConcedido)}</td>
                         <td class="py-3.5 px-4 text-xs text-slate-600">
                             <div>${formatDateBR(r.dtCessacao)}</div>
