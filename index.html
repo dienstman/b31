@@ -255,7 +255,7 @@
                                 <th class="py-3 px-4">Nº Ficha</th>
                                 <th class="py-3 px-4">Nome Segurado / CID</th>
                                 <th class="py-3 px-4">Tipo Benefício</th>
-                                <th class="py-3 px-4">CP (Concedido Por)</th>
+                                <th class="py-3 px-4">Modalidade</th>
                                 <th class="py-3 px-4">DT DER</th>
                                 <th class="py-3 px-4">DT Perícia</th>
                                 <th class="py-3 px-4">DT Conclusão</th>
@@ -307,15 +307,15 @@
                     <h3 id="b31-total" class="text-2xl font-black text-slate-900 mt-1">0</h3>
                 </div>
                 <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200/80 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-emerald-700">Concedidos (B31)</p>
+                    <p class="text-xs font-bold uppercase text-emerald-700">Concedidos</p>
                     <h3 id="b31-concedidos" class="text-2xl font-black text-emerald-800 mt-1">0</h3>
                 </div>
                 <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200/80 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-rose-700">Indeferidos (B31)</p>
+                    <p class="text-xs font-bold uppercase text-rose-700">Indeferidos)</p>
                     <h3 id="b31-indeferidos" class="text-2xl font-black text-rose-800 mt-1">0</h3>
                 </div>
                 <div class="bg-brand-50 p-4 rounded-2xl border border-brand-200/80 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-brand-700">Média DER ➔ Concessão (B31)</p>
+                    <p class="text-xs font-bold uppercase text-brand-700">Média DER ➔ Concessão</p>
                     <h3 id="b31-media-tempo" class="text-2xl font-black text-brand-900 mt-1">0 dias</h3>
                 </div>
             </div>
@@ -368,7 +368,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Gráfico Status -->
                 <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Situação do Auxílio-Doença (B31)</h3>
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Situação atual de requerimentos de Auxílio-Doença</h3>
                     <div class="relative h-64 w-full">
                         <canvas id="chart-benefit-status"></canvas>
                     </div>
@@ -386,7 +386,7 @@
             <!-- Tabela Analítica de Auxílio-Doença por Modalidade CP -->
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Detalhamento por Modalidade CP (Auxílio-Doença)</h3>
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Detalhamento por Modalidade</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -539,7 +539,7 @@
 
                     <!-- CP (CONCEDIDO POR) -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Concedido Por / Modalidade</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Modalidade</label>
                         <select id="field-cp" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                             <option value="">Selecione a modalidade...</option>
                             <option value="Análise Documental">Análise Documental (Atestmed)</option>
