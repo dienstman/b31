@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acompanhamento de Auxilio Doença</title>
-    <!-- Ícone da aba do navegador (Favicon) - Compatível com GitHub Pages -->
+    <!-- Ícone da aba do navegador (Favicon) -->
     <link rel="icon" type="image/png" href="favicon.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -37,7 +37,6 @@
         }
     </script>
     <style>
-        /* Custom Scrollbars and Print Styles */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -75,7 +74,7 @@
                     <div>
                         <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                             Acompanhamento de Auxilio Doença
-                            <span class="text-xs font-medium bg-brand-500/30 text-brand-300 border border-brand-500/40 px-2 py-0.5 rounded-full">v1</span>
+                            <span class="text-xs font-medium bg-brand-500/30 text-brand-300 border border-brand-500/40 px-2 py-0.5 rounded-full">v2</span>
                         </h1>
                         <p class="text-xs text-slate-400">Controle de Fichas e Processos Previdenciários</p>
                     </div>
@@ -196,7 +195,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
-                Relatório Auxílio-Doença (B31)
+                Relatórios e Motivos de Indeferimento
             </button>
             <button id="tab-btn-banco" onclick="switchTab('banco')" class="py-3 px-1 border-b-2 border-transparent font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 text-sm flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +213,7 @@
                     <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar por Nome, Ficha, CID ou CP..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                    <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar por Nome, Ficha, CID, CP ou Motivo..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -261,7 +260,7 @@
                                 <th class="py-3 px-4">DT Perícia</th>
                                 <th class="py-3 px-4">DT Conclusão</th>
                                 <th class="py-3 px-4">DT Cessação</th>
-                                <th class="py-3 px-4">Situação</th>
+                                <th class="py-3 px-4">Situação / Motivo</th>
                                 <th class="py-3 px-4">Dias Andamento</th>
                                 <th class="py-3 px-4 text-center no-print">Ações</th>
                             </tr>
@@ -283,15 +282,15 @@
             </div>
         </section>
 
-        <!-- TAB 2: RELATÓRIO EXCLUSIVO AUXÍLIO-DOENÇA (B31) -->
+        <!-- TAB 2: RELATÓRIOS EXCLUSIVOS E MOTIVOS DE INDEFERIMENTO -->
         <section id="tab-relatorios" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-1 rounded-md">B31</span>
-                        <h2 class="text-lg font-bold text-slate-800">Relatório Exclusivo: Auxílio-Doença</h2>
+                        <span class="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-1 rounded-md">B31 & Analytics</span>
+                        <h2 class="text-lg font-bold text-slate-800">Relatórios de Auxílio-Doença e Motivos de Indeferimento</h2>
                     </div>
-                    <p class="text-xs text-slate-500 mt-1">Análise detalhada de deferimentos, indeferimentos e tempo médio de concessão exclusivamente para Auxílio-Doença.</p>
+                    <p class="text-xs text-slate-500 mt-1">Análise dos motivos de indeferimento mais frequentes e detalhamento por modalidade CP.</p>
                 </div>
                 <button onclick="window.print()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,6 +317,50 @@
                 <div class="bg-brand-50 p-4 rounded-2xl border border-brand-200/80 shadow-sm">
                     <p class="text-xs font-bold uppercase text-brand-700">Média DER ➔ Concessão (B31)</p>
                     <h3 id="b31-media-tempo" class="text-2xl font-black text-brand-900 mt-1">0 dias</h3>
+                </div>
+            </div>
+
+            <!-- SEÇÃO NOVO RELATÓRIO: ANÁLISE DOS MOTIVOS DE INDEFERIMENTO -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Gráfico de Motivos de Indeferimento -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-rose-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Indeferimentos</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4">Proporção dos principais motivos de indeferimento registrados no sistema.</p>
+                    </div>
+                    <div class="relative h-64 w-full my-auto">
+                        <canvas id="chart-motivos-indeferimento"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tabela Detalhada dos Motivos de Indeferimento -->
+                <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Relatório Analítico de Motivos de Indeferimento</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Frequência e representatividade percentual sobre o total de negativações.</p>
+                        </div>
+                        <div class="overflow-x-auto max-h-72">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-2.5 px-4">Motivo do Indeferimento</th>
+                                        <th class="py-2.5 px-4 text-center">Quantidade</th>
+                                        <th class="py-2.5 px-4 text-center">% sobre Indeferidos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="motivos-tbody" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-500 text-right font-medium" id="motivos-total-footer">
+                        Total de indeferimentos analisados: 0
+                    </div>
                 </div>
             </div>
 
@@ -349,7 +392,7 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                                <th class="py-3 px-4">CP (Concedido Por)</th>
+                                <th class="py-3 px-4">Concedido Por</th>
                                 <th class="py-3 px-4 text-center">Total Fichas</th>
                                 <th class="py-3 px-4 text-center text-emerald-700">Concedidos</th>
                                 <th class="py-3 px-4 text-center text-rose-700">Indeferidos</th>
@@ -415,7 +458,7 @@
                                 </svg>
                             </div>
                             <h3 class="font-bold text-slate-800">Exportar para Excel (CSV)</h3>
-                            <p class="text-xs text-slate-500 mt-1">Gere uma planilha compatível com Excel para relatórios externos.</p>
+                            <p class="text-xs text-slate-500 mt-1">Gere uma planilha compatível com Excel com todas as informações e motivos de indeferimento.</p>
                         </div>
                         <button onclick="exportDataCSV()" class="mt-4 w-full bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-2.5 rounded-xl transition">
                             Baixar Planilha CSV
@@ -477,6 +520,14 @@
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Benefício *</label>
                         <select id="field-tipoBeneficio" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                             <option value="Auxílio-Doença (B31)">Auxílio-Doença (B31)</option>
+                            <option value="Auxílio-Acidente (B36)">Auxílio-Acidente (B36)</option>
+                            <option value="Aposentadoria por Invalidez (B91)">Aposentadoria Invalidez (B91)</option>
+                            <option value="BPC/LOAS Deficiência (B87)">BPC/LOAS Deficiência (B87)</option>
+                            <option value="BPC/LOAS Idoso (B88)">BPC/LOAS Idoso (B88)</option>
+                            <option value="Aposentadoria Idade (B41)">Aposentadoria Idade (B41)</option>
+                            <option value="Aposentadoria Tempo (B42)">Aposentadoria Tempo (B42)</option>
+                            <option value="Pensão por Morte (B21)">Pensão por Morte (B21)</option>
+                            <option value="Outros">Outros</option>
                         </select>
                     </div>
 
@@ -488,7 +539,7 @@
 
                     <!-- CP (CONCEDIDO POR) -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Concedido Por</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Concedido Por / Modalidade</label>
                         <select id="field-cp" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                             <option value="">Selecione a modalidade...</option>
                             <option value="Análise Documental">Análise Documental (Atestmed)</option>
@@ -501,7 +552,7 @@
                     <!-- SITUAÇÃO -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Situação do Processo *</label>
-                        <select id="field-situacao" required onchange="handleSituacaoChange()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                        <select id="field-situacao" required onchange="handleSituacaoChange()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white font-medium">
                             <option value="Em Andamento">Em Andamento</option>
                             <option value="Aguardando Perícia">Aguardando Perícia</option>
                             <option value="Exigência">Exigência</option>
@@ -513,7 +564,7 @@
 
                     <!-- DT DER -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DT DER (Data do Requerimento) *</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DT DER (Data Requerimento) *</label>
                         <input type="date" id="field-dtDer" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
                     </div>
 
@@ -536,6 +587,32 @@
                     </div>
                 </div>
 
+                <!-- CAMPO DINÂMICO: MOTIVO DO INDEFERIMENTO (Aparece ao selecionar Indeferido) -->
+                <div id="container-motivo-indeferimento" class="hidden p-4 rounded-2xl bg-rose-50 border border-rose-200/80 space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-rose-800 uppercase mb-1">Motivo do Indeferimento *</label>
+                        <select id="field-motivoIndeferimento" onchange="handleMotivoChange()" class="w-full border border-rose-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none bg-white text-rose-900 font-semibold">
+                            <option value="">Selecione o motivo da negativa...</option>
+                            <option value="Incapacidade não constatada">Incapacidade não constatada</option>
+                            <option value="Não conformidade do documento médico">Não conformidade do documento médico</option>
+                            <option value="Falta de qualidade de segurado">Falta de qualidade de segurado</option>
+                            <option value="Falta de carência">Falta de carência</option>
+                            <option value="Perda da qualidade">Perda da qualidade</option>
+                            <option value="Documentação insuficiente">Documentação insuficiente</option>
+                            <option value="Exigência não cumprida">Exigência não cumprida</option>
+                            <option value="Perícia médica desfavorável">Perícia médica desfavorável</option>
+                            <option value="Atestmed negado">Atestmed negado</option>
+                            <option value="Data de incapacidade">Data de incapacidade</option>
+                            <option value="Outro">Outro (escrever o motivo)</option>
+                        </select>
+                    </div>
+
+                    <div id="container-motivo-outro" class="hidden">
+                        <label class="block text-xs font-bold text-rose-800 uppercase mb-1">Especifique o Motivo *</label>
+                        <input type="text" id="field-motivoOutro" placeholder="Descreva detalhadamente o motivo do indeferimento..." class="w-full border border-rose-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none bg-white">
+                    </div>
+                </div>
+
                 <!-- OBSERVAÇÕES -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Observações (OBS)</label>
@@ -551,7 +628,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE VISUALIZAÇÃO DE OBSERVAÇÕES -->
+    <!-- MODAL DE VISUALIZAÇÃO DE OBSERVAÇÕES E DETALHES -->
     <div id="obs-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4">
             <h3 id="obs-modal-title" class="text-base font-bold text-slate-900">Observações da Ficha</h3>
@@ -593,7 +670,6 @@
         window.isFirebaseActive = false;
         let db = null;
         let auth = null;
-        let chartInstance = null;
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'prev-gestao-app';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
@@ -613,7 +689,6 @@
                         await signInAnonymously(auth);
                     }
 
-                    // Strict mandatory Firestore collection path: /artifacts/{appId}/public/data/fichas_beneficios
                     const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'fichas_beneficios');
 
                     onSnapshot(colRef, (snapshot) => {
@@ -666,11 +741,11 @@
             if (txt) txt.textContent = text;
 
             if (online) {
-                pulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
-                dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                if(pulse) pulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                if(dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
             } else {
-                pulse.className = "hidden";
-                dot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
+                if(pulse) pulse.className = "hidden";
+                if(dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
             }
         }
 
@@ -728,10 +803,6 @@
         window.clearAllDbRecords = async function() {
             window.recordsData = [];
             localStorage.removeItem('prev_records_backup');
-            if (window.isFirebaseActive && db) {
-                // Remove each record
-                showToast("Limpando banco...", "info");
-            }
             updateUI();
             showToast("Banco de dados completamente zerado.", "info");
         };
@@ -742,9 +813,11 @@
         });
     </script>
 
-    <!-- APPLICAITON LOGIC & CALCULATIONS -->
+    <!-- APPLICATION LOGIC, CALCULATIONS & REPORTING -->
     <script>
         let chartCpInstance = null;
+        let chartStatusInstance = null;
+        let chartMotivoInstance = null;
 
         function switchTab(tabId) {
             const tabs = ['fichas', 'relatorios', 'banco'];
@@ -780,6 +853,7 @@
                 document.getElementById('record-form').reset();
                 document.getElementById('field-id').value = '';
                 document.getElementById('modal-title').textContent = 'Nova Ficha Previdenciária';
+                handleSituacaoChange();
             }
 
             modal.classList.remove('hidden');
@@ -793,6 +867,7 @@
             if (modalId === 'record-modal') {
                 document.getElementById('record-form').reset();
                 document.getElementById('field-id').value = '';
+                handleSituacaoChange();
             }
         }
 
@@ -808,22 +883,65 @@
             renderTable();
         }
 
+        // Lógica de alteração do campo Situação (mostra/esconde Motivo de Indeferimento)
         function handleSituacaoChange() {
             const situacao = document.getElementById('field-situacao')?.value;
             const dtConcedidoInput = document.getElementById('field-dtConcedido');
-            
+            const containerMotivo = document.getElementById('container-motivo-indeferimento');
+            const fieldMotivo = document.getElementById('field-motivoIndeferimento');
+
             if (situacao === 'Concedido' && dtConcedidoInput && !dtConcedidoInput.value) {
                 const today = new Date().toISOString().split('T')[0];
                 dtConcedidoInput.value = today;
             }
+
+            if (situacao === 'Indeferido') {
+                containerMotivo?.classList.remove('hidden');
+                if (fieldMotivo) fieldMotivo.required = true;
+            } else {
+                containerMotivo?.classList.add('hidden');
+                if (fieldMotivo) {
+                    fieldMotivo.required = false;
+                    fieldMotivo.value = '';
+                }
+                const fieldOutro = document.getElementById('field-motivoOutro');
+                if (fieldOutro) fieldOutro.value = '';
+                document.getElementById('container-motivo-outro')?.classList.add('hidden');
+            }
         }
 
-        function getSituacaoBadge(situacao) {
+        // Lógica para quando "Outro" for selecionado no motivo de indeferimento
+        function handleMotivoChange() {
+            const motivoVal = document.getElementById('field-motivoIndeferimento')?.value;
+            const containerOutro = document.getElementById('container-motivo-outro');
+            const fieldOutro = document.getElementById('field-motivoOutro');
+
+            if (motivoVal === 'Outro') {
+                containerOutro?.classList.remove('hidden');
+                if (fieldOutro) fieldOutro.required = true;
+            } else {
+                containerOutro?.classList.add('hidden');
+                if (fieldOutro) {
+                    fieldOutro.required = false;
+                    fieldOutro.value = '';
+                }
+            }
+        }
+
+        function getSituacaoBadge(r) {
+            const situacao = r.situacao;
+            const motivo = r.motivoIndeferimento === 'Outro' ? r.motivoOutro : r.motivoIndeferimento;
+
             switch (situacao) {
                 case 'Concedido':
                     return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Concedido</span>`;
                 case 'Indeferido':
-                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Indeferido</span>`;
+                    return `
+                        <div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Indeferido</span>
+                            ${motivo ? `<div class="text-[11px] text-rose-700 mt-1 font-medium bg-rose-50 border border-rose-200 rounded px-2 py-0.5 inline-block" title="${escapeHtml(motivo)}">Motivo: ${escapeHtml(motivo)}</div>` : ''}
+                        </div>
+                    `;
                 case 'Em Andamento':
                     return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Em Andamento</span>`;
                 case 'Aguardando Perícia':
@@ -841,6 +959,7 @@
             e.preventDefault();
 
             const recordId = document.getElementById('field-id').value || 'rec_' + Date.now();
+            const situacao = document.getElementById('field-situacao').value;
 
             const record = {
                 id: recordId,
@@ -849,7 +968,9 @@
                 tipoBeneficio: document.getElementById('field-tipoBeneficio').value,
                 cid: document.getElementById('field-cid').value,
                 cp: document.getElementById('field-cp').value,
-                situacao: document.getElementById('field-situacao').value,
+                situacao: situacao,
+                motivoIndeferimento: situacao === 'Indeferido' ? document.getElementById('field-motivoIndeferimento').value : '',
+                motivoOutro: (situacao === 'Indeferido' && document.getElementById('field-motivoIndeferimento').value === 'Outro') ? document.getElementById('field-motivoOutro').value : '',
                 dtDer: document.getElementById('field-dtDer').value,
                 dtPericia: document.getElementById('field-dtPericia').value || null,
                 dtConcedido: document.getElementById('field-dtConcedido').value || null,
@@ -881,6 +1002,17 @@
             document.getElementById('field-cid').value = record.cid || '';
             document.getElementById('field-cp').value = record.cp || '';
             document.getElementById('field-situacao').value = record.situacao || 'Em Andamento';
+            
+            handleSituacaoChange();
+
+            if (record.situacao === 'Indeferido') {
+                document.getElementById('field-motivoIndeferimento').value = record.motivoIndeferimento || '';
+                handleMotivoChange();
+                if (record.motivoIndeferimento === 'Outro') {
+                    document.getElementById('field-motivoOutro').value = record.motivoOutro || '';
+                }
+            }
+
             document.getElementById('field-dtDer').value = record.dtDer || '';
             document.getElementById('field-dtPericia').value = record.dtPericia || '';
             document.getElementById('field-dtConcedido').value = record.dtConcedido || '';
@@ -913,8 +1045,16 @@
             const record = (window.recordsData || []).find(r => r.id === id);
             if (!record) return;
 
-            document.getElementById('obs-modal-title').textContent = `Observações - Ficha ${record.numeroFicha}`;
-            document.getElementById('obs-modal-body').textContent = record.obs || 'Nenhuma observação registrada.';
+            const motivo = record.situacao === 'Indeferido' ? (record.motivoIndeferimento === 'Outro' ? record.motivoOutro : record.motivoIndeferimento) : '';
+
+            let content = '';
+            if (motivo) {
+                content += `MOTIVO DO INDEFERIMENTO:\n${motivo}\n\n`;
+            }
+            content += `OBSERVAÇÕES:\n${record.obs || 'Nenhuma observação registrada.'}`;
+
+            document.getElementById('obs-modal-title').textContent = `Ficha ${record.numeroFicha} - ${record.nome}`;
+            document.getElementById('obs-modal-body').textContent = content;
             openModal('obs-modal');
         }
 
@@ -965,21 +1105,25 @@
                 return;
             }
 
-            const headers = ['Nº Ficha', 'Nome', 'Tipo Benefício', 'CID', 'CP', 'Situação', 'DT DER', 'DT Perícia', 'DT Conclusão', 'DT Cessação', 'Observações'];
+            const headers = ['Nº Ficha', 'Nome', 'Tipo Benefício', 'CID', 'CP', 'Situação', 'Motivo Indeferimento', 'DT DER', 'DT Perícia', 'DT Conclusão', 'DT Cessação', 'Observações'];
             
-            const rows = records.map(r => [
-                `"${(r.numeroFicha || '').replace(/"/g, '""')}"`,
-                `"${(r.nome || '').replace(/"/g, '""')}"`,
-                `"${(r.tipoBeneficio || '').replace(/"/g, '""')}"`,
-                `"${(r.cid || '').replace(/"/g, '""')}"`,
-                `"${(r.cp || '').replace(/"/g, '""')}"`,
-                `"${(r.situacao || '').replace(/"/g, '""')}"`,
-                `"${r.dtDer || ''}"`,
-                `"${r.dtPericia || ''}"`,
-                `"${r.dtConcedido || ''}"`,
-                `"${r.dtCessacao || ''}"`,
-                `"${(r.obs || '').replace(/"/g, '""')}"`
-            ]);
+            const rows = records.map(r => {
+                const motivoFinal = r.motivoIndeferimento === 'Outro' ? r.motivoOutro : (r.motivoIndeferimento || '');
+                return [
+                    `"${(r.numeroFicha || '').replace(/"/g, '""')}"`,
+                    `"${(r.nome || '').replace(/"/g, '""')}"`,
+                    `"${(r.tipoBeneficio || '').replace(/"/g, '""')}"`,
+                    `"${(r.cid || '').replace(/"/g, '""')}"`,
+                    `"${(r.cp || '').replace(/"/g, '""')}"`,
+                    `"${(r.situacao || '').replace(/"/g, '""')}"`,
+                    `"${(motivoFinal).replace(/"/g, '""')}"`,
+                    `"${r.dtDer || ''}"`,
+                    `"${r.dtPericia || ''}"`,
+                    `"${r.dtConcedido || ''}"`,
+                    `"${r.dtCessacao || ''}"`,
+                    `"${(r.obs || '').replace(/"/g, '""')}"`
+                ];
+            });
 
             const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(row => row.join(';'))].join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1009,7 +1153,7 @@
             openModal('confirm-modal');
         }
 
-        // Calculate Days in Progress (Dias em Andamento / Concessão)
+        // Calculate Days in Progress
         function calculateRecordDays(record) {
             if (!record.dtDer) return 0;
 
@@ -1046,12 +1190,8 @@
             const diffTime = periciaDate.getTime() - today.getTime();
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-            // Se a data já passou, não exibimos alerta (para evitar confusão caso ainda não tenham atualizado o status)
-            if (diffDays < 0) {
-                return '';
-            }
+            if (diffDays < 0) return '';
 
-            // Exatamente Hoje
             if (diffDays === 0) {
                 return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
                     <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
@@ -1059,7 +1199,6 @@
                 </span></div>`;
             }
 
-            // Faltam 5 dias ou menos
             if (diffDays <= 5) {
                 return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                     <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
@@ -1067,7 +1206,6 @@
                 </span></div>`;
             }
 
-            // Faltam 15 dias ou menos
             if (diffDays <= 15) {
                 return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -1078,7 +1216,6 @@
             return '';
         }
 
-        // Sistema de Alerta para Data de Cessação (DT Cessação)
         function getCessacaoAlertBadge(dtCessacaoStr, situacao) {
             if (!dtCessacaoStr || situacao === 'Cessado' || situacao === 'Indeferido') return '';
 
@@ -1094,12 +1231,8 @@
             const diffTime = cessDate.getTime() - today.getTime();
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-            // Se ultrapassar o dia da cessação (< 0): Não mostrar nada
-            if (diffDays < 0) {
-                return '';
-            }
+            if (diffDays < 0) return '';
 
-            // No dia exato da cessação (0 dias): VERDE como positivo
             if (diffDays === 0) {
                 return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1107,7 +1240,6 @@
                 </span></div>`;
             }
 
-            // Menos de 5 dias (1 a 5 dias): VERMELHO
             if (diffDays <= 5) {
                 return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                     <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
@@ -1115,7 +1247,6 @@
                 </span></div>`;
             }
 
-            // Menos de 15 dias (6 a 15 dias): AMARELO
             if (diffDays <= 15) {
                 return `<div class="mt-1"><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -1123,11 +1254,9 @@
                 </span></div>`;
             }
 
-            // Se for maior que 15 dias: Não exibe alerta de urgência
             return '';
         }
 
-        // Format Date to Brazilian Format DD/MM/YYYY
         function formatDateBR(dateString) {
             if (!dateString) return '-';
             const [year, month, day] = dateString.split('-');
@@ -1135,7 +1264,7 @@
             return `${day}/${month}/${year}`;
         }
 
-        // UI Rendering & Refreshing
+        // UI Refreshing
         function updateUI() {
             renderKPIs();
             renderTable();
@@ -1188,11 +1317,13 @@
             const situacaoFilter = document.getElementById('filter-situacao')?.value || '';
 
             let filtered = (window.recordsData || []).filter(r => {
+                const motivoTexto = r.motivoIndeferimento === 'Outro' ? r.motivoOutro : (r.motivoIndeferimento || '');
                 const matchSearch = (
                     (r.nome || '').toLowerCase().includes(search) ||
                     (r.numeroFicha || '').toLowerCase().includes(search) ||
                     (r.cid || '').toLowerCase().includes(search) ||
-                    (r.cp || '').toLowerCase().includes(search)
+                    (r.cp || '').toLowerCase().includes(search) ||
+                    (motivoTexto || '').toLowerCase().includes(search)
                 );
                 const matchBeneficio = !beneficioFilter || r.tipoBeneficio === beneficioFilter;
                 const matchSituacao = !situacaoFilter || r.situacao === situacaoFilter;
@@ -1212,7 +1343,7 @@
 
             tbody.innerHTML = filtered.map(r => {
                 const diasAndamento = calculateRecordDays(r);
-                const badgeSituacao = getSituacaoBadge(r.situacao);
+                const badgeSituacao = getSituacaoBadge(r);
                 const alertCessacao = getCessacaoAlertBadge(r.dtCessacao, r.situacao);
                 const alertPericia = getPericiaAlertBadge(r.dtPericia, r.situacao);
 
@@ -1243,11 +1374,9 @@
                         </td>
                         <td class="py-3.5 px-4 text-center no-print">
                             <div class="flex items-center justify-center space-x-2">
-                                ${r.obs ? `
-                                    <button onclick="openObsModal('${r.id}')" title="Ver Observações" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    </button>
-                                ` : ''}
+                                <button onclick="openObsModal('${r.id}')" title="Ver Detalhes/Observações" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </button>
                                 <button onclick="editRecord('${r.id}')" title="Editar Ficha" class="p-1.5 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 </button>
@@ -1261,13 +1390,16 @@
             }).join('');
         }
 
-        // RELATÓRIO EXCLUSIVO AUXÍLIO-DOENÇA (B31)
+        // RELATÓRIOS E MOTIVOS DE INDEFERIMENTO
         function renderReports() {
             const reportTbody = document.getElementById('report-tbody');
-            if (!reportTbody) return;
+            const motivosTbody = document.getElementById('motivos-tbody');
+            if (!reportTbody || !motivosTbody) return;
 
-            // Filtrar estritamente apenas Auxílio-Doença (B31)
-            const b31Data = (window.recordsData || []).filter(r => r.tipoBeneficio === 'Auxílio-Doença (B31)');
+            const allData = window.recordsData || [];
+            
+            // Dados de Auxílio-Doença (B31)
+            const b31Data = allData.filter(r => r.tipoBeneficio === 'Auxílio-Doença (B31)');
 
             const totalB31 = b31Data.length;
             const concedidosB31 = b31Data.filter(r => r.situacao === 'Concedido').length;
@@ -1286,7 +1418,77 @@
             document.getElementById('b31-indeferidos').textContent = indeferidosB31;
             document.getElementById('b31-media-tempo').textContent = `${mediaDiasB31} dias`;
 
-            // Agrupar por Modalidade CP (Concedido Por)
+            // --- 1. PROCESSAMENTO DOS MOTIVOS DE INDEFERIMENTO ---
+            const indeferidosList = allData.filter(r => r.situacao === 'Indeferido');
+            const totalIndeferidos = indeferidosList.length;
+
+            const motivosCount = {};
+            indeferidosList.forEach(r => {
+                let m = r.motivoIndeferimento || 'Não especificado';
+                if (m === 'Outro' && r.motivoOutro) {
+                    m = `Outro: ${r.motivoOutro}`;
+                }
+                motivosCount[m] = (motivosCount[m] || 0) + 1;
+            });
+
+            // Ordena motivos do maior para o menor
+            const sortedMotivos = Object.keys(motivosCount)
+                .map(key => ({ motivo: key, count: motivosCount[key] }))
+                .sort((a, b) => b.count - a.count);
+
+            if (sortedMotivos.length === 0) {
+                motivosTbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="py-6 text-center text-slate-400 text-xs italic">Nenhum benefício indeferido cadastrado até o momento.</td>
+                    </tr>
+                `;
+            } else {
+                motivosTbody.innerHTML = sortedMotivos.map(item => {
+                    const pct = totalIndeferidos > 0 ? ((item.count / totalIndeferidos) * 100).toFixed(1) : '0.0';
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-2.5 px-4 font-semibold text-slate-800 text-xs">${escapeHtml(item.motivo)}</td>
+                            <td class="py-2.5 px-4 text-center font-bold text-rose-700 bg-rose-50/50 text-xs">${item.count}</td>
+                            <td class="py-2.5 px-4 text-center font-bold text-slate-700 text-xs">${pct}%</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('motivos-total-footer').textContent = `Total de indeferimentos analisados: ${totalIndeferidos}`;
+
+            // Gráfico: Motivos de Indeferimento
+            const ctxMotivo = document.getElementById('chart-motivos-indeferimento');
+            if (ctxMotivo) {
+                if (window.chartMotivoInstance) window.chartMotivoInstance.destroy();
+
+                const labelsMotivos = sortedMotivos.slice(0, 5).map(i => i.motivo);
+                const dataMotivos = sortedMotivos.slice(0, 5).map(i => i.count);
+
+                window.chartMotivoInstance = new Chart(ctxMotivo, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labelsMotivos.length > 0 ? labelsMotivos : ['Sem dados'],
+                        datasets: [{
+                            data: dataMotivos.length > 0 ? dataMotivos : [1],
+                            backgroundColor: labelsMotivos.length > 0 ? ['#f43f5e', '#fb7185', '#fda4af', '#f43f5e99', '#e11d4866'] : ['#e2e8f0'],
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 12, font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- 2. DETALHAMENTO POR MODALIDADE CP ---
             const cpTypes = ['Análise Documental', 'Perícia Médica', 'Perícia Telemedicina', 'Outros'];
             const cpStats = {};
             cpTypes.forEach(cp => {
@@ -1309,7 +1511,6 @@
                 }
             });
 
-            // Tabela por CP no Auxílio-Doença
             reportTbody.innerHTML = cpTypes.map(cp => {
                 const s = cpStats[cp];
                 const finalizados = s.concedidos + s.indeferidos;
@@ -1332,9 +1533,9 @@
             // Gráfico 1: Situação Geral de Auxílio-Doença
             const ctxStatus = document.getElementById('chart-benefit-status');
             if (ctxStatus) {
-                if (window.chartInstance) window.chartInstance.destroy();
+                if (window.chartStatusInstance) window.chartStatusInstance.destroy();
 
-                window.chartInstance = new Chart(ctxStatus, {
+                window.chartStatusInstance = new Chart(ctxStatus, {
                     type: 'doughnut',
                     data: {
                         labels: ['Concedidos', 'Indeferidos', 'Em Andamento'],
@@ -1396,15 +1597,16 @@
             };
 
             const samples = [
-                { id: 'rec_001', numeroFicha: 'F-2026-001', nome: 'Maria Aparecida da Silva', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'M54.5', cp: 'Análise Documental', situacao: 'Concedido', dtDer: '2026-01-10', dtPericia: '2026-01-20', dtConcedido: '2026-02-01', dtCessacao: formatDate(10), obs: 'Benefício concedido por análise documental via Atestmed.' },
-                { id: 'rec_002', numeroFicha: 'F-2026-002', nome: 'João Carlos Pereira', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'I10', cp: 'Perícia Médica', situacao: 'Concedido', dtDer: '2026-01-15', dtPericia: '2026-02-10', dtConcedido: '2026-02-25', dtCessacao: formatDate(3), obs: 'Alerta crítico de cessação em menos de 5 dias!' },
-                { id: 'rec_003', numeroFicha: 'F-2026-003', nome: 'Ana Lucia Rodrigues', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'F32', cp: 'Análise Documental', situacao: 'Concedido', dtDer: '2026-02-01', dtPericia: null, dtConcedido: '2026-02-15', dtCessacao: formatDate(0), obs: 'Cessa exatamente hoje.' },
-                { id: 'rec_004', numeroFicha: 'F-2026-004', nome: 'Carlos Eduardo Santos', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'S82', cp: 'Perícia Médica', situacao: 'Indeferido', dtDer: '2026-01-20', dtPericia: '2026-02-20', dtConcedido: null, dtCessacao: null, obs: 'Perícia do INSS indeferiu. Ajuizada ação.' },
-                { id: 'rec_005', numeroFicha: 'F-2026-005', nome: 'Francisca das Chagas', tipoBeneficio: 'Aposentadoria Idade (B41)', cid: '-', cp: 'Outros', situacao: 'Concedido', dtDer: '2026-02-01', dtPericia: null, dtConcedido: '2026-03-01', dtCessacao: null, obs: 'Aposentadoria concedida.' }
+                { id: 'rec_001', numeroFicha: 'F-2026-001', nome: 'Maria Aparecida da Silva', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'M54.5', cp: 'Análise Documental', situacao: 'Concedido', motivoIndeferimento: '', motivoOutro: '', dtDer: '2026-01-10', dtPericia: '2026-01-20', dtConcedido: '2026-02-01', dtCessacao: formatDate(10), obs: 'Benefício concedido por análise documental via Atestmed.' },
+                { id: 'rec_002', numeroFicha: 'F-2026-002', nome: 'João Carlos Pereira', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'I10', cp: 'Perícia Médica', situacao: 'Concedido', motivoIndeferimento: '', motivoOutro: '', dtDer: '2026-01-15', dtPericia: '2026-02-10', dtConcedido: '2026-02-25', dtCessacao: formatDate(3), obs: 'Alerta crítico de cessação em menos de 5 dias!' },
+                { id: 'rec_003', numeroFicha: 'F-2026-003', nome: 'Ana Lucia Rodrigues', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'F32', cp: 'Análise Documental', situacao: 'Indeferido', motivoIndeferimento: 'Não conformidade do documento médico', motivoOutro: '', dtDer: '2026-02-01', dtPericia: null, dtConcedido: null, dtCessacao: null, obs: 'Documento médico sem assinatura com certificado digital.' },
+                { id: 'rec_004', numeroFicha: 'F-2026-004', nome: 'Carlos Eduardo Santos', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'S82', cp: 'Perícia Médica', situacao: 'Indeferido', motivoIndeferimento: 'Incapacidade não constatada', motivoOutro: '', dtDer: '2026-01-20', dtPericia: '2026-02-20', dtConcedido: null, dtCessacao: null, obs: 'Perícia do INSS indeferiu alegando falta de incapacidade laborativa.' },
+                { id: 'rec_005', numeroFicha: 'F-2026-005', nome: 'Francisca das Chagas', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'M17', cp: 'Perícia Médica', situacao: 'Indeferido', motivoIndeferimento: 'Perícia médica desfavorável', motivoOutro: '', dtDer: '2026-02-05', dtPericia: '2026-02-28', dtConcedido: null, dtCessacao: null, obs: 'Laudo pericial não constatou incapacidade temporária.' },
+                { id: 'rec_006', numeroFicha: 'F-2026-006', nome: 'Roberto Alves de Oliveira', tipoBeneficio: 'Auxílio-Doença (B31)', cid: 'G40', cp: 'Análise Documental', situacao: 'Indeferido', motivoIndeferimento: 'Outro', motivoOutro: 'Divergência de atividade profissional declarada', dtDer: '2026-02-10', dtPericia: null, dtConcedido: null, dtCessacao: null, obs: 'Divergência entre CNIS e declaração do empregador.' }
             ];
 
             samples.forEach(s => window.saveRecordToDb(s));
-            showToast("5 fichas de teste inseridas!", "success");
+            showToast("6 fichas de exemplo cadastradas com sucesso!", "success");
         }
 
         // Toast Helper
@@ -1419,10 +1621,7 @@
                 'bg-slate-800'
             }`;
 
-            toast.innerHTML = `
-                <span>${escapeHtml(message)}</span>
-            `;
-
+            toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
             container.appendChild(toast);
 
             setTimeout(() => {
