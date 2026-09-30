@@ -545,6 +545,7 @@
                             <option value="Análise Documental">Análise Documental (Atestmed)</option>
                             <option value="Perícia Médica">Perícia Médica Presencial</option>
                             <option value="Perícia Telemedicina">Perícia Telemedicina</option>
+                            <option value="Prorrogação">Prorrogação</option>                            
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
@@ -1489,7 +1490,7 @@
             }
 
             // --- 2. DETALHAMENTO POR MODALIDADE CP ---
-            const cpTypes = ['Análise Documental', 'Perícia Médica', 'Perícia Telemedicina', 'Outros'];
+            const cpTypes = ['Análise Documental', 'Perícia Médica', 'Perícia Telemedicina', 'Prorrogação', 'Outros'];
             const cpStats = {};
             cpTypes.forEach(cp => {
                 cpStats[cp] = { total: 0, concedidos: 0, indeferidos: 0, andamento: 0, somaDias: 0, qtdDatas: 0 };
