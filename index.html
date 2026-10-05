@@ -311,7 +311,7 @@
                     <h3 id="b31-concedidos" class="text-2xl font-black text-emerald-800 mt-1">0</h3>
                 </div>
                 <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200/80 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-rose-700">Indeferidos)</p>
+                    <p class="text-xs font-bold uppercase text-rose-700">Indeferidos</p>
                     <h3 id="b31-indeferidos" class="text-2xl font-black text-rose-800 mt-1">0</h3>
                 </div>
                 <div class="bg-brand-50 p-4 rounded-2xl border border-brand-200/80 shadow-sm">
@@ -1059,102 +1059,6 @@
             openModal('obs-modal');
         }
 
-        function exportDataJSON() {
-            const dataStr = JSON.stringify(window.recordsData || [], null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `backup_fichas_prevgestao_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            showToast('Backup JSON exportado com sucesso!', 'success');
-        }
-
-        function importDataJSON(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    if (Array.isArray(imported)) {
-                        imported.forEach(r => {
-                            if (r.id && r.numeroFicha && typeof window.saveRecordToDb === 'function') {
-                                window.saveRecordToDb(r);
-                            }
-                        });
-                        showToast(`${imported.length} fichas importadas com sucesso!`, 'success');
-                    } else {
-                        showToast('Formato JSON inválido. Esperado uma lista de fichas.', 'error');
-                    }
-                } catch (err) {
-                    showToast('Erro ao ler o arquivo JSON.', 'error');
-                }
-            };
-            reader.readAsText(file);
-            e.target.value = '';
-        }
-
-        function exportDataCSV() {
-            const records = window.recordsData || [];
-            if (records.length === 0) {
-                showToast('Nenhum dado disponível para exportar.', 'error');
-                return;
-            }
-
-            const headers = ['Nº Ficha', 'Nome', 'Tipo Benefício', 'CID', 'CP', 'Situação', 'Motivo Indeferimento', 'DT DER', 'DT Perícia', 'DT Conclusão', 'DT Cessação', 'Observações'];
-            
-            const rows = records.map(r => {
-                const motivoFinal = r.motivoIndeferimento === 'Outro' ? r.motivoOutro : (r.motivoIndeferimento || '');
-                return [
-                    `"${(r.numeroFicha || '').replace(/"/g, '""')}"`,
-                    `"${(r.nome || '').replace(/"/g, '""')}"`,
-                    `"${(r.tipoBeneficio || '').replace(/"/g, '""')}"`,
-                    `"${(r.cid || '').replace(/"/g, '""')}"`,
-                    `"${(r.cp || '').replace(/"/g, '""')}"`,
-                    `"${(r.situacao || '').replace(/"/g, '""')}"`,
-                    `"${(motivoFinal).replace(/"/g, '""')}"`,
-                    `"${r.dtDer || ''}"`,
-                    `"${r.dtPericia || ''}"`,
-                    `"${r.dtConcedido || ''}"`,
-                    `"${r.dtCessacao || ''}"`,
-                    `"${(r.obs || '').replace(/"/g, '""')}"`
-                ];
-            });
-
-            const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(row => row.join(';'))].join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `fichas_prevgestao_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            showToast('Planilha CSV/Excel gerada com sucesso!', 'success');
-        }
-
-        function confirmClearAll() {
-            document.getElementById('confirm-title').textContent = 'Apagar Todo o Banco';
-            document.getElementById('confirm-message').textContent = 'ATENÇÃO: Esta ação apagarar TODAS as fichas cadastradas no sistema. Deseja continuar?';
-
-            const btn = document.getElementById('confirm-action-btn');
-            btn.onclick = function() {
-                if (typeof window.clearAllDbRecords === 'function') {
-                    window.clearAllDbRecords();
-                }
-                closeModal('confirm-modal');
-            };
-
-            openModal('confirm-modal');
-        }
-
-        // Calculate Days in Progress
         function calculateRecordDays(record) {
             if (!record.dtDer) return 0;
 
@@ -1308,6 +1212,17 @@
             document.getElementById('kpi-media-meses').textContent = `~ ${mediaMeses} meses`;
         }
 
+        // Retorna a data mais antiga entre data de perícia e data de cessação para definir prioridade
+        function getRecordPriorityDate(r) {
+            const dates = [];
+            if (r.dtPericia) dates.push(r.dtPericia);
+            if (r.dtCessacao) dates.push(r.dtCessacao);
+
+            if (dates.length === 0) return null;
+            dates.sort(); // Ordena em ordem crescente (YYYY-MM-DD)
+            return dates[0];
+        }
+
         function renderTable() {
             const tbody = document.getElementById('records-tbody');
             const emptyState = document.getElementById('empty-state');
@@ -1332,7 +1247,29 @@
                 return matchSearch && matchBeneficio && matchSituacao;
             });
 
-            filtered.sort((a, b) => (b.id > a.id ? 1 : -1));
+            // ORDENAÇÃO POR PRIORIDADE: quanto mais cedo a data de perícia ou de cessação, mais acima o processo fica
+            filtered.sort((a, b) => {
+                const dateA = getRecordPriorityDate(a);
+                const dateB = getRecordPriorityDate(b);
+
+                if (dateA && dateB) {
+                    if (dateA !== dateB) {
+                        return dateA.localeCompare(dateB); // Data mais antiga/cedo fica primeiro
+                    }
+                } else if (dateA) {
+                    return -1; // Registros com data têm prioridade sobre os sem data
+                } else if (dateB) {
+                    return 1;
+                }
+
+                // Desempate: data de DER mais antiga ou ID mais recente
+                const derA = a.dtDer || '';
+                const derB = b.dtDer || '';
+                if (derA !== derB) {
+                    return derA.localeCompare(derB);
+                }
+                return String(b.id).localeCompare(String(a.id));
+            });
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '';
@@ -1586,6 +1523,101 @@
                     }
                 });
             }
+        }
+
+        function exportDataJSON() {
+            const dataStr = JSON.stringify(window.recordsData || [], null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup_fichas_prevgestao_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Backup JSON exportado com sucesso!', 'success');
+        }
+
+        function importDataJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        imported.forEach(r => {
+                            if (r.id && r.numeroFicha && typeof window.saveRecordToDb === 'function') {
+                                window.saveRecordToDb(r);
+                            }
+                        });
+                        showToast(`${imported.length} fichas importadas com sucesso!`, 'success');
+                    } else {
+                        showToast('Formato JSON inválido. Esperado uma lista de fichas.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Erro ao ler o arquivo JSON.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function exportDataCSV() {
+            const records = window.recordsData || [];
+            if (records.length === 0) {
+                showToast('Nenhum dado disponível para exportar.', 'error');
+                return;
+            }
+
+            const headers = ['Nº Ficha', 'Nome', 'Tipo Benefício', 'CID', 'CP', 'Situação', 'Motivo Indeferimento', 'DT DER', 'DT Perícia', 'DT Conclusão', 'DT Cessação', 'Observações'];
+            
+            const rows = records.map(r => {
+                const motivoFinal = r.motivoIndeferimento === 'Outro' ? r.motivoOutro : (r.motivoIndeferimento || '');
+                return [
+                    `"${(r.numeroFicha || '').replace(/"/g, '""')}"`,
+                    `"${(r.nome || '').replace(/"/g, '""')}"`,
+                    `"${(r.tipoBeneficio || '').replace(/"/g, '""')}"`,
+                    `"${(r.cid || '').replace(/"/g, '""')}"`,
+                    `"${(r.cp || '').replace(/"/g, '""')}"`,
+                    `"${(r.situacao || '').replace(/"/g, '""')}"`,
+                    `"${(motivoFinal).replace(/"/g, '""')}"`,
+                    `"${r.dtDer || ''}"`,
+                    `"${r.dtPericia || ''}"`,
+                    `"${r.dtConcedido || ''}"`,
+                    `"${r.dtCessacao || ''}"`,
+                    `"${(r.obs || '').replace(/"/g, '""')}"`
+                ];
+            });
+
+            const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(row => row.join(';'))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `fichas_prevgestao_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Planilha CSV/Excel gerada com sucesso!', 'success');
+        }
+
+        function confirmClearAll() {
+            document.getElementById('confirm-title').textContent = 'Apagar Todo o Banco';
+            document.getElementById('confirm-message').textContent = 'ATENÇÃO: Esta ação apagarar TODAS as fichas cadastradas no sistema. Deseja continuar?';
+
+            const btn = document.getElementById('confirm-action-btn');
+            btn.onclick = function() {
+                if (typeof window.clearAllDbRecords === 'function') {
+                    window.clearAllDbRecords();
+                }
+                closeModal('confirm-modal');
+            };
+
+            openModal('confirm-modal');
         }
 
         // Generate Sample Dummy Records for Testing
